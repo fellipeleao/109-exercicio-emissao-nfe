@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import com.example.msnotafiscal.clients.LogClient;
 import com.example.msnotafiscal.dtos.CreateSolicitacaoNfeRequest;
-import com.example.msnotafiscal.dtos.LogClientRequest;
 import com.example.msnotafiscal.models.SolicitacaoNfe;
 import com.example.msnotafiscal.repositories.SolicitacaoNfeRepository;
 
@@ -18,11 +16,11 @@ public class SolicitacaoNfeService
 	@Autowired
 	SolicitacaoNfeRepository solicitacaoNfeRepository;
 	
-	@Autowired
-	LogClient logClient;
-	
-	@Autowired//       (tipo chave, tipo valor)
+	@Autowired//       Kfaka Nfe (tipo chave, tipo valor)
     private KafkaTemplate<String, SolicitacaoNfe> senderKfaka;
+	
+	@Autowired//       Kfaka Log (tipo chave, tipo valor)
+    private KafkaTemplate<String, String> senderKfakaLog;
 
 	public SolicitacaoNfe criaSolicitacaoNfe(CreateSolicitacaoNfeRequest createNfeRequest)
 	{
@@ -37,15 +35,14 @@ public class SolicitacaoNfeService
 		// Chama Kafka
 		senderKfaka.send("fellipe-biro-1","1", sNfe);
 		
-		// Chama Log
-		LogClientRequest logReq = new LogClientRequest();
-		logReq.setMensagemLog(
-				  "[" + java.time.Clock.systemUTC().instant() + "]"
-				+ "[Emissão] " 
-				+ solicitacaoNfe.getIdentidade()  
-				+ " acaba de pedir a emissão de uma NF no valor de "
-				+ solicitacaoNfe.getValor());
-		logClient.escreveLog(logReq);
+		// Escreve Log
+		String mensagemLog =
+			"[" + java.time.Clock.systemUTC().instant() + "]"
+			+ "[Emissão] " 
+			+ solicitacaoNfe.getIdentidade()  
+			+ " acaba de pedir a emissão de uma NF no valor de "
+			+ solicitacaoNfe.getValor();
+		senderKfakaLog.send("fellipe-biro-2","2", mensagemLog);
 		
 		return sNfe;
 	}
@@ -53,13 +50,12 @@ public class SolicitacaoNfeService
 	public List<SolicitacaoNfe> consultaSolicitacaoNfe(String cpfcnpj)
 	{
 		// Chama Log
-		LogClientRequest logReq = new LogClientRequest();
-		logReq.setMensagemLog(
-				  "[" + java.time.Clock.systemUTC().instant() + "]"
-				+ "[Consulta] " 
-				+ cpfcnpj  
-				+ " acaba de pedir os dados das suas notas fiscais.");
-		logClient.escreveLog(logReq);
+		String mensagemLog =
+			  "[" + java.time.Clock.systemUTC().instant() + "]"
+			+ "[Consulta] " 
+			+ cpfcnpj  
+			+ " acaba de pedir os dados das suas notas fiscais.";
+		senderKfakaLog.send("fellipe-biro-2","2", mensagemLog);
 		
 		return solicitacaoNfeRepository.findAllByIdentidade(cpfcnpj);
 	}

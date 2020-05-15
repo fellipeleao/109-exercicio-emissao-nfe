@@ -1,29 +1,32 @@
 package br.com.itau.mslog.controllers;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
-import br.com.itau.mslog.dtos.CreateLogRequest;
-import br.com.itau.mslog.dtos.CreateLogResponse;
-import br.com.itau.mslog.services.LogService;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.stereotype.Component;
 
-@RestController
+@Component
 public class LogController 
 {
-	@Autowired
-	LogService logService;
+	private static final String NOME_ARQUIVO = "logSistemaNfe.log";
 	
-	@PostMapping("/log/escreveLog")
-	@ResponseStatus(value = HttpStatus.CREATED)
-	public CreateLogResponse escreveLog(@RequestBody CreateLogRequest createLogRequest)
+	@KafkaListener(topics = "fellipe-biro-2", groupId = "fellipe-biro-2")
+	public void recebeLog(@Payload String mensagemLog)
 	{
-		CreateLogResponse cResp = new CreateLogResponse();
-		cResp.setLogStatus(logService.escreveLog(createLogRequest.getMensagemLog()));
-		return cResp;
+		System.out.println("Log de Sistema: " + mensagemLog);
+		
+        try 
+        {
+            Files.write(Paths.get(NOME_ARQUIVO), mensagemLog.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        } 
+        catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
 	}
 	
 }
