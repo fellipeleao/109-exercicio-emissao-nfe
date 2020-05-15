@@ -20,9 +20,9 @@ public class NfeController
 	
 	@PostMapping("/nfe/geraNfe")
 	@ResponseStatus(value = HttpStatus.OK)
-	public SolicitacaoNfe geraNfe(@RequestBody CalculaImpostoRequest calculaImpostoRequest)
+	public SolicitacaoNfe geraNfe(@RequestBody SolicitacaoNfe solNfe)
 	{
-		return nfeService.geraNfe(calculaImpostoRequest.getIdSolicitacao());
+		return nfeService.geraNfe(solNfe);
 	}
 	
 }
